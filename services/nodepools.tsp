@@ -10,7 +10,7 @@ using OpenAPI;
 
 namespace HyperFleet;
 
-//@tag("NodePools")
+@tag("NodePools")
 @useAuth(HyperFleet.BearerAuth)
 interface NodePools {
     /**
@@ -55,7 +55,8 @@ interface NodePools {
     ):
          (CreatedResponse & NodePoolCreateResponse)
          | Error
-         | BadRequestResponse;
+         | BadRequestResponse
+         | ConflictResponse;
 
     /**
      * Returns specific nodepool
@@ -110,5 +111,6 @@ interface NodePools {
     ): NodePool
       | Error
       | NotFoundResponse
-      | BadRequestResponse;
+      | BadRequestResponse
+      | ConflictResponse;
 }

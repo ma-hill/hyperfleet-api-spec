@@ -35,7 +35,7 @@ alias ClusterSpec = Record<unknown>;  // Generic
 alias ClusterSpec = GCPClusterSpec;   // Provider-specific
 ```
 
-The `aliases.tsp` symlink determines which provider types are active. The `build-schema.sh` script automatically re-links this during builds.
+The `aliases.tsp` symlink determines which provider types are active. The `build-schema.sh` script automatically re-links this during builds. The symlink is tracked in git and should always point to `aliases-core.tsp` by default. Do not remove it from version control or add it to `.gitignore`.
 
 **When adding new models:**
 - Shared models → `models/`
@@ -46,7 +46,7 @@ The `aliases.tsp` symlink determines which provider types are active. The `build
 
 Status endpoints are split:
 - `services/statuses.tsp` - GET operations (external clients)
-- `services/statuses-internal.tsp` - POST operations (internal adapters only)
+- `services/statuses-internal.tsp` - PUT operations (internal adapters only)
 
 The split allows generating different API contracts per audience. Only `statuses.tsp` is imported by default.
 
@@ -107,7 +107,7 @@ services/
   4. `./build-schema.sh core --swagger`
 - Test both provider variants when modifying shared models
 - Keep TypeSpec files focused (one resource per service file)
-- Use semantic versioning for releases (see RELEASING.md)
+- Use semantic versioning for releases (automated on merge to main)
 
 ## Common Tasks
 
@@ -188,6 +188,15 @@ alias ClusterSpec = GCPClusterSpec;
 
 Build: `npm run build:gcp`
 
+## Version Bump and Changelog
+
+When bumping the version in `main.tsp`, always update `CHANGELOG.md`:
+
+1. Keep `## [Unreleased]` at the top, then add a new version section as `## [X.Y.Z] - YYYY-MM-DD`
+2. List changes under appropriate headings (`Added`, `Changed`, `Fixed`, `Removed`)
+3. Update the comparison links at the bottom of the file
+4. Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format
+
 ## Validation Checklist
 
 Before submitting changes:
@@ -199,6 +208,7 @@ Before submitting changes:
 - [ ] Core Swagger builds: `./build-schema.sh core --swagger`
 - [ ] Schema files generated: `ls schemas/*/openapi.yaml`
 - [ ] No TypeSpec compilation errors (check output)
+- [ ] Schemas pass linting: `spectral lint schemas/core/openapi.yaml schemas/gcp/openapi.yaml`
 - [ ] Changes committed including schema updates
 - [ ] PR description references related issue
 
@@ -207,7 +217,7 @@ Before submitting changes:
 **The build-schema.sh script:**
 1. Validates provider parameter (core, gcp, etc.)
 2. Re-links `aliases.tsp` → `aliases-{provider}.tsp`
-3. Runs `tsp compile main.tsp`
+3. Runs `node_modules/.bin/tsp compile main.tsp`
 4. Copies output to `schemas/{provider}/openapi.yaml`
 5. (Optional) Converts to OpenAPI 2.0 with `--swagger` flag
 
@@ -242,27 +252,18 @@ Match the version range to existing dependencies.
 
 ## Release Process
 
-Quick reference (see RELEASING.md for details):
+Releases are **fully automated** via GitHub Actions (`.github/workflows/release.yml`).
 
-```bash
-# 1. Build schemas
-npm run build:all
+On every push to `main`, the release workflow:
+1. Extracts the version from the `@info` decorator in `main.tsp`
+2. Skips if a tag for that version already exists
+3. Builds all four schema variants (core/gcp OpenAPI 3.0 + Swagger 2.0)
+4. Creates an annotated Git tag (`vX.Y.Z`)
+5. Publishes a GitHub Release with all four artifacts attached
 
-# 2. Commit and tag
-git add schemas/
-git commit -m "chore: update schemas for vX.Y.Z"
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
+The CI workflow (`.github/workflows/ci.yml`) enforces that the version in `main.tsp` is bumped from the latest release tag before a PR can be merged.
 
-# 3. Push tag
-git push upstream vX.Y.Z
-
-# 4. Create GitHub Release with schema assets
-gh release create vX.Y.Z \
-  --repo openshift-hyperfleet/hyperfleet-api-spec \
-  --title "vX.Y.Z" \
-  schemas/core/openapi.yaml#core-openapi.yaml \
-  schemas/gcp/openapi.yaml#gcp-openapi.yaml
-```
+To release a new version, simply bump the version in `main.tsp` and merge to `main`.
 
 ## Architecture Context
 

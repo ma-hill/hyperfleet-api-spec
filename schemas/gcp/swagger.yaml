@@ -2,6 +2,7 @@ swagger: '2.0'
 info:
   contact:
     name: HyperFleet Team
+    url: 'https://github.com/openshift-hyperfleet'
   description: >-
     HyperFleet API provides simple CRUD operations for managing cluster
     resources and their status history.
@@ -16,7 +17,7 @@ info:
     name: Apache 2.0
     url: 'https://www.apache.org/licenses/LICENSE-2.0'
   title: HyperFleet API
-  version: 1.0.8
+  version: 1.0.13
 host: hyperfleet.redhat.com
 basePath: /
 schemes:
@@ -74,6 +75,9 @@ paths:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - Clusters
+      description: Returns a list of all clusters.
       operationId: getClusters
       summary: List clusters
     post:
@@ -103,6 +107,8 @@ paths:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - Clusters
       description: >-
         Create a new cluster resource.
 
@@ -112,8 +118,8 @@ paths:
 
         It is NOT part of the request body. Initially,
 
-        status.conditions will include mandatory "Available", "Ready" and
-        "Reconciled" conditions.
+        status.conditions will include mandatory "LastKnownReconciled", "Ready"
+        and "Reconciled" conditions.
       operationId: postCluster
       summary: Create cluster
   '/api/hyperfleet/v1/clusters/{cluster_id}':
@@ -173,12 +179,10 @@ paths:
                     last_transition_time: '2021-01-01T10:00:00Z'
                     last_updated_time: '2021-01-01T10:00:00Z'
                     message: >-
-                      All adapters reported Ready True for the current
-                      generation
+                      All required adapters reported Available=True or
+                      Finalized=True at the current generation
                     observed_generation: 2
-                    reason: >-
-                      All adapters reported Ready True for the current
-                      generation
+                    reason: ReconciledAll
                     status: 'True'
                     type: Ready
                   - created_time: '2021-01-01T10:00:00Z'
@@ -188,23 +192,19 @@ paths:
                       All required adapters reported Available=True or
                       Finalized=True at the current generation
                     observed_generation: 2
-                    reason: >-
-                      All required adapters reported Available=True or
-                      Finalized=True at the current generation
+                    reason: ReconciledAll
                     status: 'True'
                     type: Reconciled
                   - created_time: '2021-01-01T10:00:00Z'
                     last_transition_time: '2021-01-01T10:00:00Z'
                     last_updated_time: '2021-01-01T10:00:00Z'
                     message: >-
-                      All adapters reported Available True for the same
-                      generation
+                      All required adapters report Available=True for the
+                      tracked generation
                     observed_generation: 2
-                    reason: >-
-                      All adapters reported Available True for the same
-                      generation
+                    reason: AllAdaptersReconciled
                     status: 'True'
-                    type: Available
+                    type: LastKnownReconciled
                   - created_time: '2021-01-01T10:00:00Z'
                     last_transition_time: '2021-01-01T10:00:00Z'
                     last_updated_time: '2021-01-01T10:00:00Z'
@@ -235,6 +235,8 @@ paths:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - Clusters
       description: >-
         Marks the cluster for deletion by setting deleted_time to the current
         time, cascades to its nodepools.
@@ -275,6 +277,9 @@ paths:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - Clusters
+      description: Returns a single cluster by its ID.
       operationId: getClusterById
       summary: Get cluster by ID
     patch:
@@ -303,12 +308,16 @@ paths:
           description: The server could not understand the request due to invalid syntax.
         '404':
           description: The server cannot find the requested resource.
+        '409':
+          description: The request conflicts with the current state of the server.
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - Clusters
       description: Patch a specific cluster by ID
       operationId: patchClusterById
       summary: Patch cluster by ID
@@ -369,6 +378,8 @@ paths:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - NodePools
       description: Returns the list of all nodepools for a cluster
       operationId: getNodePoolsByClusterId
       summary: List all nodepools for cluster
@@ -398,12 +409,16 @@ paths:
             $ref: '#/definitions/NodePoolCreateResponse'
         '400':
           description: The server could not understand the request due to invalid syntax.
+        '409':
+          description: The request conflicts with the current state of the server.
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - NodePools
       description: Create a NodePool for a cluster
       operationId: createNodePool
       summary: Create nodepool
@@ -473,9 +488,11 @@ paths:
                   - created_time: '2021-01-01T10:00:00Z'
                     last_transition_time: '2021-01-01T10:00:00Z'
                     last_updated_time: '2021-01-01T10:00:00Z'
-                    message: All conditions successful for current spec generation
+                    message: >-
+                      All required adapters reported Available=True or
+                      Finalized=True at the current generation
                     observed_generation: 2
-                    reason: ResourceReady
+                    reason: ReconciledAll
                     status: 'True'
                     type: Ready
                   - created_time: '2021-01-01T10:00:00Z'
@@ -485,19 +502,19 @@ paths:
                       All required adapters reported Available=True or
                       Finalized=True at the current generation
                     observed_generation: 2
-                    reason: >-
-                      All required adapters reported Available=True or
-                      Finalized=True at the current generation
+                    reason: ReconciledAll
                     status: 'True'
                     type: Reconciled
                   - created_time: '2021-01-01T10:00:00Z'
                     last_transition_time: '2021-01-01T10:00:00Z'
                     last_updated_time: '2021-01-01T10:00:00Z'
-                    message: All conditions successful for observed_generation
+                    message: >-
+                      All required adapters report Available=True for the
+                      tracked generation
                     observed_generation: 2
-                    reason: ResourceAvailable
+                    reason: AllAdaptersReconciled
                     status: 'True'
-                    type: Available
+                    type: LastKnownReconciled
                   - created_time: '2021-01-01T10:00:00Z'
                     last_transition_time: '2021-01-01T10:00:00Z'
                     last_updated_time: '2021-01-01T10:00:00Z'
@@ -528,6 +545,8 @@ paths:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - NodePools
       description: >-
         Marks the nodepool for deletion by setting deleted_time and deleted_by.
         Does not affect the parent cluster.
@@ -563,6 +582,8 @@ paths:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - NodePools
       description: Returns specific nodepool
       operationId: getNodePoolById
       summary: Get nodepool by ID
@@ -597,12 +618,16 @@ paths:
           description: The server could not understand the request due to invalid syntax.
         '404':
           description: The server cannot find the requested resource.
+        '409':
+          description: The request conflicts with the current state of the server.
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - NodePools
       description: Patch a specific nodepool within a cluster
       operationId: patchNodePoolById
       summary: Patch nodepool by ID
@@ -665,6 +690,8 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/Error'
+      tags:
+        - NodePool statuses
       description: Returns adapter status reports for this nodepool
       operationId: getNodePoolsStatuses
       summary: List all adapter statuses for nodepools
@@ -722,6 +749,8 @@ paths:
           description: The server cannot find the requested resource.
       security:
         - BearerAuth: []
+      tags:
+        - Cluster statuses
       description: Returns adapter status reports for this cluster
       operationId: getClusterStatuses
       summary: List all adapter statuses for cluster
@@ -777,6 +806,8 @@ paths:
             $ref: '#/definitions/Error'
       security:
         - BearerAuth: []
+      tags:
+        - NodePools
       description: Returns the list of all nodepools
       operationId: getNodePools
       summary: List all nodepools for cluster
@@ -900,7 +931,7 @@ definitions:
         description: >-
           When this adapter last reported its status (API-managed)
 
-          Updated every time the adapter POSTs, even if conditions haven't
+          Updated every time the adapter PUTs, even if conditions haven't
           changed
 
           Used by Sentinel to detect adapter liveness
@@ -1065,9 +1096,11 @@ definitions:
           - created_time: '2021-01-01T10:00:00Z'
             last_transition_time: '2021-01-01T10:00:00Z'
             last_updated_time: '2021-01-01T10:00:00Z'
-            message: All adapters reported Ready True for the current generation
+            message: >-
+              All required adapters reported Available=True or Finalized=True at
+              the current generation
             observed_generation: 1
-            reason: All adapters reported Ready True for the current generation
+            reason: ReconciledAll
             status: 'True'
             type: Ready
           - created_time: '2021-01-01T10:00:00Z'
@@ -1077,19 +1110,19 @@ definitions:
               All required adapters reported Available=True or Finalized=True at
               the current generation
             observed_generation: 1
-            reason: >-
-              All required adapters reported Available=True or Finalized=True at
-              the current generation
+            reason: ReconciledAll
             status: 'True'
             type: Reconciled
           - created_time: '2021-01-01T10:00:00Z'
             last_transition_time: '2021-01-01T10:00:00Z'
             last_updated_time: '2021-01-01T10:00:00Z'
-            message: All adapters reported Available True for the same generation
+            message: >-
+              All required adapters report Available=True for the tracked
+              generation
             observed_generation: 1
-            reason: All adapters reported Available True for the same generation
+            reason: AllAdaptersReconciled
             status: 'True'
-            type: Available
+            type: LastKnownReconciled
           - created_time: '2021-01-01T10:00:00Z'
             last_transition_time: '2021-01-01T10:00:00Z'
             last_updated_time: '2021-01-01T10:00:00Z'
@@ -1383,8 +1416,10 @@ definitions:
           - `type: "Reconciled"`: Whether the resource's desired state has been
           fully reconciled by all adapters at the current generation.
 
-          - `type: "Available"`: Aggregated adapter result for a common
-          observed_generation.   
+          - `type: "LastKnownReconciled"`: Sticky cross-generation condition —
+          stays True as long as all required adapters were reconciled at a
+          common observed generation, even if a newer generation is being
+          processed.
 
 
           These conditions are present immediately upon resource creation.
@@ -1419,7 +1454,7 @@ definitions:
       instance:
         description: URI reference for this specific occurrence
         example: /api/hyperfleet/v1/clusters
-        format: uri
+        format: uri-reference
         type: string
       status:
         description: HTTP status code
@@ -1502,9 +1537,11 @@ definitions:
           - created_time: '2021-01-01T10:00:00Z'
             last_transition_time: '2021-01-01T10:00:00Z'
             last_updated_time: '2021-01-01T10:00:00Z'
-            message: All conditions successful for current spec generation
+            message: >-
+              All required adapters reported Available=True or Finalized=True at
+              the current generation
             observed_generation: 1
-            reason: ResourceReady
+            reason: ReconciledAll
             status: 'True'
             type: Ready
           - created_time: '2021-01-01T10:00:00Z'
@@ -1514,19 +1551,19 @@ definitions:
               All required adapters reported Available=True or Finalized=True at
               the current generation
             observed_generation: 1
-            reason: >-
-              All required adapters reported Available=True or Finalized=True at
-              the current generation
+            reason: ReconciledAll
             status: 'True'
             type: Reconciled
           - created_time: '2021-01-01T10:00:00Z'
             last_transition_time: '2021-01-01T10:00:00Z'
             last_updated_time: '2021-01-01T10:00:00Z'
-            message: All conditions successful for observed_generation
+            message: >-
+              All required adapters report Available=True for the tracked
+              generation
             observed_generation: 1
-            reason: ResourceAvailable
+            reason: AllAdaptersReconciled
             status: 'True'
-            type: Available
+            type: LastKnownReconciled
           - created_time: '2021-01-01T10:00:00Z'
             last_transition_time: '2021-01-01T10:00:00Z'
             last_updated_time: '2021-01-01T10:00:00Z'
@@ -1893,8 +1930,10 @@ definitions:
           - `type: "Reconciled"`: Whether the resource's desired state has been
           fully reconciled by all adapters at the current generation.
 
-          - `type: "Available"`: Aggregated adapter result for a common
-          observed_generation.   
+          - `type: "LastKnownReconciled"`: Sticky cross-generation condition —
+          stays True as long as all required adapters were reconciled at a
+          common observed generation, even if a newer generation is being
+          processed.
 
 
           These conditions are present immediately upon resource creation.
@@ -1955,7 +1994,7 @@ definitions:
         description: >-
           When the corresponding adapter last reported (API-managed)
 
-          Updated every time the adapter POSTs, even if condition status hasn't
+          Updated every time the adapter PUTs, even if condition status hasn't
           changed
 
           Copied from AdapterStatus.last_report_time
@@ -2042,7 +2081,11 @@ securityDefinitions:
     in: header
     name: Authorization
     type: apiKey
-tags: []
+tags:
+  - name: Clusters
+  - name: Cluster statuses
+  - name: NodePool statuses
+  - name: NodePools
 x-components:
   parameters:
     QueryParams.order:

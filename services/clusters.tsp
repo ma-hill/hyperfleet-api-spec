@@ -10,7 +10,7 @@ using Http;
 using OpenAPI;
 
 namespace HyperFleet;
-//@tag("Clusters")
+@tag("Clusters")
 @route("/clusters")
 @useAuth(HyperFleet.BearerAuth)
 interface Clusters {
@@ -18,7 +18,8 @@ interface Clusters {
   @route("")
   @summary("List clusters")
   @operationId("getClusters")
-  getClusters(...QueryParams): Body<ClusterList> 
+  @doc("Returns a list of all clusters.")
+  getClusters(...QueryParams): Body<ClusterList>
     | Error
     | BadRequestResponse;
 
@@ -26,6 +27,7 @@ interface Clusters {
   @get
   @summary("Get cluster by ID")
   @operationId("getClusterById")
+  @doc("Returns a single cluster by its ID.")
   getClusterById(
     ...SearchParams,
     @path cluster_id: string,
@@ -38,7 +40,7 @@ interface Clusters {
    *
    * **Note**: The `status` object in the response is read-only and computed by the service.
    * It is NOT part of the request body. Initially,
-   * status.conditions will include mandatory "Available", "Ready" and "Reconciled" conditions.
+   * status.conditions will include mandatory "LastKnownReconciled", "Ready" and "Reconciled" conditions.
    *
    */
   @route("")
@@ -66,7 +68,8 @@ interface Clusters {
   ): Cluster
     | Error
     | NotFoundResponse
-    | BadRequestResponse;
+    | BadRequestResponse
+    | ConflictResponse;
 
   /**
    * Marks the cluster for deletion by setting deleted_time to the current time, cascades to its nodepools.
